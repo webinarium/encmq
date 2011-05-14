@@ -1,0 +1,74 @@
+//-----------------------------------------------------------------------------
+//
+//  Copyright (C) 2010-2011 Artem Rodygin
+//
+//  This file is part of EncMQ.
+//
+//  EncMQ is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  EncMQ is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with EncMQ.  If not, see <http://www.gnu.org/licenses/>.
+//
+//-----------------------------------------------------------------------------
+
+package message;
+
+//-----------------------------------------------------------------------------
+//  Message incoming to server.
+//-----------------------------------------------------------------------------
+
+message request
+{
+    // AES encryption key of the requestor
+    required uint32 key_size    = 1;    // length of encryption key (in bytes)
+    optional bytes  key_data    = 2;    // string with encryption key
+
+    // message authentication code
+    required uint32 mac_size    = 3;    // size of MAC (in bytes)
+    optional bytes  mac_data    = 4;    // MAC body
+
+    // message body
+    required string msg_type    = 5;    // message type (descriptor)
+    required uint32 msg_size    = 6;    // size of message body (in bytes)
+    optional bytes  msg_data    = 7;    // message body
+};
+
+//-----------------------------------------------------------------------------
+//  Reply outgoing from server.
+//-----------------------------------------------------------------------------
+
+message reply
+{
+    // message authentication code
+    required uint32 mac_size    = 1;    // size of MAC (in bytes)
+    optional bytes  mac_data    = 2;    // MAC body
+
+    // message body
+    required string msg_type    = 3;    // message type (descriptor)
+    required uint32 msg_size    = 4;    // size of reply body (in bytes)
+    optional bytes  msg_data    = 5;    // reply body
+};
+
+//-----------------------------------------------------------------------------
+//  RSA handshaking.
+//-----------------------------------------------------------------------------
+
+// Request for RSA public key, sending by client to server.
+message rsa_hello
+{
+};
+
+// RSA public key, being sent to client by server in reply on 'rsa_hello' message.
+message rsa_key
+{
+    required uint32 key_size    = 1;    // length of RSA public key (in bytes)
+    optional bytes  key_data    = 2;    // string with RSA public key
+};
