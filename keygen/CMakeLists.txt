@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  Copyright (C) 2009 Artem Rodygin
+#  Copyright (C) 2011 Artem Rodygin
 #
 #  This file is part of EncMQ.
 #
@@ -19,25 +19,34 @@
 #
 #------------------------------------------------------------------------------
 
-project(encmq)
+project(keygen)
 cmake_minimum_required(VERSION 2.6)
 
-set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/cmake)
+find_package(OpenSSL QUIET REQUIRED)
+
+aux_source_directory(src ${PROJECT_NAME}_SRC)
+
+if (WIN32)
+list(APPEND ${PROJECT_NAME}_SRC ${OPENSSL_INCLUDE_DIR}/openssl/applink.c)
+endif (WIN32)
+
+include_directories(${OPENSSL_INCLUDE_DIR}
+                    ${CMAKE_BINARY_DIR}/include
+                    ${CMAKE_BINARY_DIR}/build/include)
+
+link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
+add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SRC} ${${PROJECT_NAME}_HDR})
+
+add_dependencies(${PROJECT_NAME} encmq)
+
+target_link_libraries(${PROJECT_NAME} encmq)
 
 if (MSVC)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
+add_definitions(-W3 -D_CRT_SECURE_NO_WARNINGS)
 else (MSVC)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build/bin)
+add_definitions(-Wall -Wextra -Wno-sign-compare -ansi)
 endif (MSVC)
 
+message(STATUS "Target '${PROJECT_NAME}' is configured")
 message("---------------------------------------------")
-
-add_subdirectory(log4cplus build/log4cplus)
-add_subdirectory(protobuf  build/protobuf)
-add_subdirectory(protoc    build/protoc)
-add_subdirectory(zeromq    build/zeromq)
-add_subdirectory(encmq     build/encmq)
-add_subdirectory(keygen    build/keygen)
-add_subdirectory(test      build/test)
