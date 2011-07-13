@@ -42,6 +42,18 @@
 #include <cstring>
 
 //-----------------------------------------------------------------------------
+//  For backward compatibility btw ZeroMQ 2 and ZeroMQ 3
+//-----------------------------------------------------------------------------
+
+#define ZMQ_ERROR       -1
+
+#if ZMQ_VERSION_MAJOR == 2
+#define ZMQ_DONTWAIT    ZMQ_NOBLOCK
+#define zmq_recvmsg     zmq_recv
+#define zmq_sendmsg     zmq_send
+#endif
+
+//-----------------------------------------------------------------------------
 //  Constants.
 //-----------------------------------------------------------------------------
 

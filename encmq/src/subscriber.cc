@@ -84,7 +84,7 @@ bool subscriber::receive (Message * msg,        /**< [out] Received message.    
     zmq_msg_t message;
     zmq_msg_init(&message);
 
-    if (zmq_recv(m_socket, &message, (block ? 0 : ZMQ_NOBLOCK)) != 0)
+    if (zmq_recvmsg(m_socket, &message, (block ? 0 : ZMQ_DONTWAIT)) == ZMQ_ERROR)
     {
         if (errno == EAGAIN)
         {
@@ -94,7 +94,7 @@ bool subscriber::receive (Message * msg,        /**< [out] Received message.    
         }
         else
         {
-            LOG4CPLUS_ERROR(logger, "[encmq::subscriber::receive] zmq_recv = " << zmq_strerror(errno));
+            LOG4CPLUS_ERROR(logger, "[encmq::subscriber::receive] zmq_recvmsg = " << zmq_strerror(errno));
             zmq_msg_close(&message);
             throw exception(ENCMQ_ERROR_UNKNOWN);
         }
@@ -120,7 +120,7 @@ void subscriber::subscribe (const char * topic)     /**< [in] Topic(s) to subscr
     int topic_len = (topic == NULL ? 0 : strlen(topic));
     if (topic_len > 0 && topic[topic_len - 1] != '.') topic_len++;
 
-    if (zmq_setsockopt(m_socket, ZMQ_SUBSCRIBE, topic, topic_len) != 0)
+    if (zmq_setsockopt(m_socket, ZMQ_SUBSCRIBE, topic, topic_len) == ZMQ_ERROR)
     {
         LOG4CPLUS_ERROR(logger, "[encmq::subscriber::subscribe] zmq_setsockopt = " << zmq_strerror(errno));
         throw exception(ENCMQ_ERROR_UNKNOWN);
@@ -142,7 +142,7 @@ void subscriber::unsubscribe (const char * topic)   /**< [in] Topic(s) to unsubs
     int topic_len = (topic == NULL ? 0 : strlen(topic));
     if (topic_len > 0 && topic[topic_len - 1] != '.') topic_len++;
 
-    if (zmq_setsockopt(m_socket, ZMQ_UNSUBSCRIBE, topic, topic_len) != 0)
+    if (zmq_setsockopt(m_socket, ZMQ_UNSUBSCRIBE, topic, topic_len) == ZMQ_ERROR)
     {
         LOG4CPLUS_ERROR(logger, "[encmq::subscriber::unsubscribe] zmq_setsockopt = " << zmq_strerror(errno));
         throw exception(ENCMQ_ERROR_UNKNOWN);
