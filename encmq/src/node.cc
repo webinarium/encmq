@@ -110,7 +110,7 @@ node::node (int          type,  /**< [in] Type of node: \n
             case ZMQ_PUB:
             case ZMQ_REP:
 
-                if (zmq_bind(m_socket, addrline.c_str()) != 0)
+                if (zmq_bind(m_socket, addrline.c_str()) == ZMQ_ERROR)
                 {
                     LOG4CPLUS_ERROR(logger, "[encmq::node::node] zmq_bind = " << zmq_strerror(errno));
 
@@ -133,7 +133,7 @@ node::node (int          type,  /**< [in] Type of node: \n
             case ZMQ_SUB:
             case ZMQ_REQ:
 
-                if (zmq_connect(m_socket, addrline.c_str()) != 0)
+                if (zmq_connect(m_socket, addrline.c_str()) == ZMQ_ERROR)
                 {
                     LOG4CPLUS_ERROR(logger, "[encmq::node::node] zmq_connect = " << zmq_strerror(errno));
                     throw exception(ENCMQ_ERROR_UNKNOWN);
@@ -164,12 +164,12 @@ node::~node () throw ()
 {
     LOG4CPLUS_TRACE(logger, "[encmq::node::~node] ENTER");
 
-    if (zmq_close(m_socket) != 0)
+    if (zmq_close(m_socket) == ZMQ_ERROR)
     {
         LOG4CPLUS_ERROR(logger, "[encmq::node::~node] zmq_close = " << zmq_strerror(errno));
     }
 
-    if (zmq_term(m_context) != 0)
+    if (zmq_term(m_context) == ZMQ_ERROR)
     {
         LOG4CPLUS_ERROR(logger, "[encmq::node::~node] zmq_term = " << zmq_strerror(errno));
     }
@@ -198,7 +198,7 @@ bool node::send (const Message * msg,       /**< [in] Message to be sent.       
     zmq_msg_t message;
     serialize(msg, &message);
 
-    if (zmq_send(m_socket, &message, (block ? 0 : ZMQ_NOBLOCK)) != 0)
+    if (zmq_sendmsg(m_socket, &message, (block ? 0 : ZMQ_DONTWAIT)) == ZMQ_ERROR)
     {
         if (errno == EAGAIN)
         {
@@ -208,7 +208,7 @@ bool node::send (const Message * msg,       /**< [in] Message to be sent.       
         }
         else
         {
-            LOG4CPLUS_ERROR(logger, "[encmq::node::send] zmq_send = " << zmq_strerror(errno));
+            LOG4CPLUS_ERROR(logger, "[encmq::node::send] zmq_sendmsg = " << zmq_strerror(errno));
             zmq_msg_close(&message);
             throw exception(ENCMQ_ERROR_UNKNOWN);
         }
@@ -236,7 +236,7 @@ bool node::receive (Message * msg,      /**< [out] Received message.            
     zmq_msg_t message;
     zmq_msg_init(&message);
 
-    if (zmq_recv(m_socket, &message, (block ? 0 : ZMQ_NOBLOCK)) != 0)
+    if (zmq_recvmsg(m_socket, &message, (block ? 0 : ZMQ_DONTWAIT)) == ZMQ_ERROR)
     {
         if (errno == EAGAIN)
         {
@@ -246,7 +246,7 @@ bool node::receive (Message * msg,      /**< [out] Received message.            
         }
         else
         {
-            LOG4CPLUS_ERROR(logger, "[encmq::node::receive] zmq_recv = " << zmq_strerror(errno));
+            LOG4CPLUS_ERROR(logger, "[encmq::node::receive] zmq_recvmsg = " << zmq_strerror(errno));
             zmq_msg_close(&message);
             throw exception(ENCMQ_ERROR_UNKNOWN);
         }

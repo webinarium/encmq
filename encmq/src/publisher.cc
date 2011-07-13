@@ -93,7 +93,7 @@ bool publisher::send (const Message * msg,      /**< [in] Message to be sent.   
     zmq_msg_t message;
     serialize(msg, &message, topic);
 
-    if (zmq_send(m_socket, &message, (block ? 0 : ZMQ_NOBLOCK)) != 0)
+    if (zmq_sendmsg(m_socket, &message, (block ? 0 : ZMQ_DONTWAIT)) == ZMQ_ERROR)
     {
         if (errno == EAGAIN)
         {
@@ -103,7 +103,7 @@ bool publisher::send (const Message * msg,      /**< [in] Message to be sent.   
         }
         else
         {
-            LOG4CPLUS_ERROR(logger, "[encmq::publisher::send] zmq_send = " << zmq_strerror(errno));
+            LOG4CPLUS_ERROR(logger, "[encmq::publisher::send] zmq_sendmsg = " << zmq_strerror(errno));
             zmq_msg_close(&message);
             throw exception(ENCMQ_ERROR_UNKNOWN);
         }
