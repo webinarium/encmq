@@ -93,6 +93,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #cmakedefine HAVE_STRING_H 1
 
+/* Define to 1 if you have the <sys/eventfd.h> header file. */
+#cmakedefine HAVE_SYS_EVENTFD_H 1
+
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #cmakedefine HAVE_SYS_SOCKET_H 1
 
@@ -162,6 +165,9 @@
 
 /* Have Cygwin */
 #cmakedefine ZMQ_HAVE_CYGWIN 1
+
+/* Have eventfd extension. */
+#cmakedefine ZMQ_HAVE_EVENTFD 1
 
 /* Have FreeBSD OS */
 #cmakedefine ZMQ_HAVE_FREEBSD 1
