@@ -109,6 +109,10 @@ else (MSVC)
         message(FATAL_ERROR "cannot link with -luuid, install uuid-dev.")
         endif (NOT HAVE_LIBUUID)
 
+    elseif (HOST_OS MATCHES android)
+
+        set(ZMQ_HAVE_ANDROID TRUE)
+
     elseif (HOST_OS MATCHES solaris)
 
         set(ZMQ_HAVE_SOLARIS  TRUE)
