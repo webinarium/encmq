@@ -6,6 +6,9 @@
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #cmakedefine HAVE_ARPA_INET_H 1
 
+/* Define to 1 if you have the `clock_gettime' function. */
+#cmakedefine HAVE_CLOCK_GETTIME 1
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #cmakedefine HAVE_DLFCN_H 1
 
@@ -29,6 +32,9 @@
 
 /* Define to 1 if you have the `crypto' library (-lcrypto). */
 #cmakedefine HAVE_LIBCRYPTO 1
+
+/* Define to 1 if you have the `dcekt' library (-ldcekt). */
+#cmakedefine HAVE_LIBDCEKT 1
 
 /* Define to 1 if you have the `iphlpapi' library (-liphlpapi). */
 #cmakedefine HAVE_LIBIPHLPAPI 1
@@ -75,6 +81,9 @@
 /* Define to 1 if you have the `socket' function. */
 #cmakedefine HAVE_SOCKET 1
 
+/* Whether SOCK_CLOEXEC is defined and functioning. */
+#cmakedefine HAVE_SOCK_CLOEXEC 1
+
 /* Define to 1 if stdbool.h conforms to C99. */
 #cmakedefine HAVE_STDBOOL_H 1
 
@@ -108,6 +117,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #cmakedefine HAVE_SYS_TYPES_H 1
 
+/* Define to 1 if you have the <time.h> header file. */
+#cmakedefine HAVE_TIME_H 1
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H 1
 
@@ -134,7 +146,7 @@
 #define PACKAGE_NAME "zeromq"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zeromq 2.1.10"
+#define PACKAGE_STRING "zeromq 2.1.11"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zeromq"
@@ -143,7 +155,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.1.10"
+#define PACKAGE_VERSION "2.1.11"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE ${RETSIGTYPE}
@@ -155,7 +167,7 @@
 #cmakedefine TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "2.1.10"
+#define VERSION "2.1.11"
 
 /* Force to use mutexes */
 #cmakedefine ZMQ_FORCE_MUTEXES 1
