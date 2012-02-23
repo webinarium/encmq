@@ -79,7 +79,7 @@ int zmq::tcp_socket_t::write (const void *data, int size)
     //  we'll get an error (this may happen during the speculative write).
     if (nbytes == SOCKET_ERROR && WSAGetLastError () == WSAEWOULDBLOCK)
         return 0;
-
+		
     //  Signalise peer failure.
     if (nbytes == -1 && (
           WSAGetLastError () == WSAENETDOWN ||
@@ -119,7 +119,7 @@ int zmq::tcp_socket_t::read (void *data, int size)
 
     //  Orderly shutdown by the other peer.
     if (nbytes == 0)
-        return -1;
+        return -1; 
 
     return (size_t) nbytes;
 }
@@ -200,9 +200,6 @@ int zmq::tcp_socket_t::write (const void *data, int size)
     if (nbytes == -1 && (errno == ECONNRESET || errno == EPIPE))
         return -1;
 
-    if (nbytes == 1)
-        fprintf (stderr, "E: unhandled error on send: %d/%s\n",
-                 errno, strerror (errno));
     errno_assert (nbytes != -1);
     return (size_t) nbytes;
 }
@@ -214,18 +211,21 @@ int zmq::tcp_socket_t::read (void *data, int size)
     //  Several errors are OK. When speculative read is being done we may not
     //  be able to read a single byte to the socket. Also, SIGSTOP issued
     //  by a debugging tool can result in EINTR error.
-    if (nbytes == -1 && (errno == EAGAIN || errno == EWOULDBLOCK ||
-          errno == EINTR))
+    if (nbytes == -1
+    && (errno == EAGAIN
+     || errno == EWOULDBLOCK
+     || errno == EINTR))
         return 0;
 
-    //  Signalise peer failure.
-    if (nbytes == -1 && (errno == ECONNRESET || errno == ECONNREFUSED ||
-          errno == ETIMEDOUT || errno == EHOSTUNREACH))
+    //  Signal peer failure.
+    if (nbytes == -1
+    && (errno == ECONNRESET
+     || errno == ECONNREFUSED
+     || errno == ETIMEDOUT
+     || errno == EHOSTUNREACH
+     || errno == ENOTCONN))
         return -1;
 
-    if (nbytes == 1)
-        fprintf (stderr, "E: unhandled error on recv: %d/%s\n",
-                 errno, strerror (errno));
     errno_assert (nbytes != -1);
 
     //  Orderly shutdown by the other peer.

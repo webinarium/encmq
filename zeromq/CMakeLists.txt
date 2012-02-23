@@ -78,6 +78,7 @@ else (MSVC)
     set(ZMQ_HAVE_EVENTFD TRUE)
     endif (HAVE_SYS_EVENTFD_H)
 
+    CHECK_FUNCTION_EXISTS(clock_gettime HAVE_CLOCK_GETTIME)
     CHECK_FUNCTION_EXISTS(freeifaddrs   HAVE_FREEIFADDRS)
     CHECK_FUNCTION_EXISTS(getifaddrs    HAVE_GETIFADDRS)
     CHECK_FUNCTION_EXISTS(gettimeofday  HAVE_GETTIMEOFDAY)
@@ -89,6 +90,7 @@ else (MSVC)
     CHECK_LIBRARY_EXISTS("stdc++"  "malloc"         "" HAVE_LIBSTDC__)
     CHECK_LIBRARY_EXISTS("m"       "matherr"        "" HAVE_LIBM)
 
+    CHECK_SYMBOL_EXISTS("SOCK_CLOEXEC" sys/socket.h HAVE_SOCK_CLOEXEC)
     CHECK_SYMBOL_EXISTS("_Bool" stdbool.h HAVE__BOOL)
 
     add_definitions(-D_REENTRANT)
@@ -175,8 +177,9 @@ else (MSVC)
 
         add_definitions(-D_POSIX_C_SOURCE=200112L)
 
-        CHECK_LIBRARY_EXISTS("rt"     "sem_init"   "" HAVE_LIBRT)
-        CHECK_LIBRARY_EXISTS("crypto" "RAND_bytes" "" HAVE_LIBCRYPTO)
+        CHECK_LIBRARY_EXISTS("rt"     "sem_init"    "" HAVE_LIBRT)
+        CHECK_LIBRARY_EXISTS("dcekt"  "uuid_create" "" HAVE_LIBDCEKT)
+        CHECK_LIBRARY_EXISTS("crypto" "RAND_bytes"  "" HAVE_LIBCRYPTO)
 
     elseif (HOST_OS MATCHES mingw32)
 
