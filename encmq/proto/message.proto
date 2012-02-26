@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-//  Copyright (C) 2010-2011 Artem Rodygin
+//  Copyright (C) 2010-2012 Artem Rodygin
 //
 //  This file is part of EncMQ.
 //
@@ -22,53 +22,28 @@
 package message;
 
 //-----------------------------------------------------------------------------
-//  Message incoming to server.
+//  General envelope for plain messages.
 //-----------------------------------------------------------------------------
 
-message request
+message envelope
 {
-    // AES encryption key of the requestor
-    required uint32 key_size    = 1;    // length of encryption key (in bytes)
-    optional bytes  key_data    = 2;    // string with encryption key
+    // message body
+    required string msg_type    = 1;    // message type (descriptor)
+    required uint32 msg_size    = 2;    // size of message body (in bytes)
+    optional bytes  msg_data    = 3;    // message body
 
     // message authentication code
-    required uint32 mac_size    = 3;    // size of MAC (in bytes)
-    optional bytes  mac_data    = 4;    // MAC body
+    optional bytes  mac         = 4;
 
-    // message body
-    required string msg_type    = 5;    // message type (descriptor)
-    required uint32 msg_size    = 6;    // size of message body (in bytes)
-    optional bytes  msg_data    = 7;    // message body
+    // message extensions
+    extensions 100 to max;
 };
 
 //-----------------------------------------------------------------------------
-//  Reply outgoing from server.
+//  Secured envelope for encrypted messages.
 //-----------------------------------------------------------------------------
 
-message reply
+extend envelope
 {
-    // message authentication code
-    required uint32 mac_size    = 1;    // size of MAC (in bytes)
-    optional bytes  mac_data    = 2;    // MAC body
-
-    // message body
-    required string msg_type    = 3;    // message type (descriptor)
-    required uint32 msg_size    = 4;    // size of reply body (in bytes)
-    optional bytes  msg_data    = 5;    // reply body
-};
-
-//-----------------------------------------------------------------------------
-//  RSA handshaking.
-//-----------------------------------------------------------------------------
-
-// Request for RSA public key, sending by client to server.
-message rsa_hello
-{
-};
-
-// RSA public key, being sent to client by server in reply on 'rsa_hello' message.
-message rsa_key
-{
-    required uint32 key_size    = 1;    // length of RSA public key (in bytes)
-    optional bytes  key_data    = 2;    // string with RSA public key
+    optional bytes  key         = 100;  // AES symmetric key
 };

@@ -114,4 +114,54 @@ bool publisher::send (const Message * msg,      /**< [in] Message to be sent.   
     return true;
 }
 
+//-----------------------------------------------------------------------------
+//  Protected interface.
+//-----------------------------------------------------------------------------
+
+/**
+ * Stub implementation.
+ *
+ * @return Always true.
+ */
+bool publisher::before_send (Message *)
+{
+    return true;
+}
+
+/**
+ * Stub implementation.
+ *
+ * @return Always true.
+ */
+bool publisher::after_receive (Message *)
+{
+    return true;
+}
+
+/**
+ * Encrypts serialized message.
+ *
+ * @param [in] msg_data Custom serialized message.
+ * @param [in] msg_size Size of the serialized message.
+ * @return true  - message was successfully encrypted.
+ * @return false - error is occured.
+ */
+bool publisher::encrypt (unsigned char *, int)
+{
+    return true;
+}
+
+/**
+ * Decrypts serialized message.
+ *
+ * @param [in] msg_data Custom serialized message.
+ * @param [in] msg_size Size of the serialized message.
+ * @return true  - message was successfully decrypted.
+ * @return false - error is occured.
+ */
+bool publisher::decrypt (unsigned char *, int)
+{
+    return true;
+}
+
 }

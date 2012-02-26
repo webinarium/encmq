@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-//  Copyright (C) 2010-2011 Artem Rodygin
+//  Copyright (C) 2010-2012 Artem Rodygin
 //
 //  This file is part of EncMQ.
 //
@@ -26,9 +26,6 @@
 
 #ifndef ENCMQ_H
 #define ENCMQ_H
-
-// ZeroMQ
-#include <zmq.h>
 
 // Protocol Buffers
 #include <google/protobuf/message.h>
@@ -129,8 +126,17 @@ protected:
     ENCMQ_EXPORT node  (int type, const char * addr, int port);
     ENCMQ_EXPORT ~node () throw ();
 
-    ENCMQ_EXPORT bool send    (const Message * msg, bool block = true);
-    ENCMQ_EXPORT bool receive (Message       * msg, bool block = true);
+    ENCMQ_EXPORT bool      send    (const Message * msg, bool block = true);
+    ENCMQ_EXPORT bool      receive (Message       * msg, bool block = true);
+    ENCMQ_EXPORT Message * receive (bool block = true);
+
+protected:
+
+    virtual bool before_send   (Message * msg) = 0;
+    virtual bool after_receive (Message * msg) = 0;
+
+    virtual bool encrypt (unsigned char * msg_data, int msg_size) = 0;
+    virtual bool decrypt (unsigned char * msg_data, int msg_size) = 0;
 
 protected:
 
@@ -145,7 +151,7 @@ class server : public node
 {
 public:
 
-    ENCMQ_EXPORT server  (const char * addr, int port, const char * keyfile = NULL);
+    ENCMQ_EXPORT server  (const char * addr, int port, const char * keyfile);
     ENCMQ_EXPORT ~server ();
 
     ENCMQ_EXPORT bool      send    (const Message * msg, bool block = true);
@@ -154,8 +160,16 @@ public:
 
 protected:
 
-    RSA            * m_rsa;     /**< @private RSA keys.                                                 */
+    virtual bool before_send   (Message * msg);
+    virtual bool after_receive (Message * msg);
+
+    virtual bool encrypt (unsigned char * msg_data, int msg_size);
+    virtual bool decrypt (unsigned char * msg_data, int msg_size);
+
+protected:
+
     EVP_CIPHER_CTX   m_ctx;     /**< @private AES cipher context.                                       */
+    RSA            * m_rsa;     /**< @private RSA keys.                                                 */
     unsigned char  * m_key;     /**< @private Saved client's symmetric key for AES cipher.              */
     bool             use_key;   /**< @private Whether to use saved key when sending response to client. */
 };
@@ -167,7 +181,7 @@ class client : public node
 {
 public:
 
-    ENCMQ_EXPORT client  (const char * addr, int port, bool cipher = false, const char * keyfile = NULL);
+    ENCMQ_EXPORT client  (const char * addr, int port, const char * keyfile = NULL);
     ENCMQ_EXPORT ~client ();
 
     ENCMQ_EXPORT bool      send    (const Message * msg, bool block = true);
@@ -176,9 +190,17 @@ public:
 
 protected:
 
+    virtual bool before_send   (Message * msg);
+    virtual bool after_receive (Message * msg);
+
+    virtual bool encrypt (unsigned char * msg_data, int msg_size);
+    virtual bool decrypt (unsigned char * msg_data, int msg_size);
+
+protected:
+
     EVP_CIPHER_CTX   m_ctx;     /**< @private AES cipher context.           */
+    RSA            * m_rsa;     /**< @private RSA public key from server.   */
     unsigned char  * m_key;     /**< @private Symmetric key for AES cipher. */
-    RSA            * m_pubkey;  /**< @private RSA public key from server.   */
 };
 
 /**
@@ -191,6 +213,14 @@ public:
     ENCMQ_EXPORT publisher (const char * addr, int port);
 
     ENCMQ_EXPORT bool send (const Message * msg, const char * topic = NULL, bool block = true);
+
+protected:
+
+    virtual bool before_send   (Message * msg);
+    virtual bool after_receive (Message * msg);
+
+    virtual bool encrypt (unsigned char * msg_data, int msg_size);
+    virtual bool decrypt (unsigned char * msg_data, int msg_size);
 };
 
 /**
@@ -206,6 +236,14 @@ public:
 
     ENCMQ_EXPORT void subscribe   (const char * topic = NULL);
     ENCMQ_EXPORT void unsubscribe (const char * topic = NULL);
+
+protected:
+
+    virtual bool before_send   (Message * msg);
+    virtual bool after_receive (Message * msg);
+
+    virtual bool encrypt (unsigned char * msg_data, int msg_size);
+    virtual bool decrypt (unsigned char * msg_data, int msg_size);
 };
 
 }

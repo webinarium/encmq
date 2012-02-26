@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-//  Copyright (C) 2010-2011 Artem Rodygin
+//  Copyright (C) 2010-2012 Artem Rodygin
 //
 //  This file is part of EncMQ.
 //
@@ -71,11 +71,11 @@ void wait ()
 
 //-----------------------------------------------------------------------------
 
-void server_main ()
+void server1_main ()
 {
     try
     {
-        auto_ptr <encmq::server> server(new encmq::server("0.0.0.0", 5555));
+        auto_ptr <encmq::server> server(new encmq::server("0.0.0.0", 5555, "private.key"));
 
         msgtest::request  req;
         msgtest::response rep;
@@ -105,7 +105,7 @@ void server2_main ()
 {
     try
     {
-        auto_ptr <encmq::server> server(new encmq::server("0.0.0.0", 5555));
+        auto_ptr <encmq::server> server(new encmq::server("0.0.0.0", 5555, "private.key"));
 
         google::protobuf::Message * msg = server->receive();
 
@@ -147,50 +147,38 @@ void server3_main ()
     {
         auto_ptr <encmq::server> server(new encmq::server("0.0.0.0", 5555, "private.key"));
 
-        msgtest::request  req;
-        msgtest::response rep;
+        google::protobuf::Message * msg = server->receive();
 
-        bool res = server->receive(&req);
+        bool res = (msg != NULL);
 
-        res = res && (req.id()    == 1         );
-        res = res && (req.login() == "apushkin");
+        if (msg != NULL)
+        {
+            res = res && (msg->GetDescriptor() == msgtest::request::descriptor());
 
-        rep.set_firstname("Alexandr");
-        rep.set_lastname("Pushkin");
-        rep.set_age(210);
+            msgtest::request * req = dynamic_cast <msgtest::request *> (msg);
 
-        res = res && server->send(&rep);
+            res = res && (req->id()    == 1         );
+            res = res && (req->login() == "apushkin");
 
-        CHECK(res);
+            msgtest::response rep;
+
+            rep.set_firstname("Alexandr");
+            rep.set_lastname("Pushkin");
+            rep.set_age(210);
+
+            res = res && server->send(&rep);
+
+            delete msg;
+        }
     }
     catch (encmq::exception &)
     {
-        CHECK(false);
     }
 }
 
 //-----------------------------------------------------------------------------
 
-void server4_main ()
-{
-    try
-    {
-        auto_ptr <encmq::server> server(new encmq::server("0.0.0.0", 5555));
-
-        google::protobuf::Message * msg = server->receive();
-        delete msg;
-
-        CHECK(false);
-    }
-    catch (encmq::exception &e)
-    {
-        CHECK(e.error() == ENCMQ_ERROR_SSL_RSA);
-    }
-}
-
-//-----------------------------------------------------------------------------
-
-void publisher_main ()
+void publisher1_main ()
 {
     try
     {
@@ -257,73 +245,7 @@ int main ()
     encmq::initialize();
     encmq::set_loglevel(ENCMQ_FATAL_LOG_LEVEL);
 
-    // 1-2 //------------------------------------------------------------------
-    try
-    {
-        TEST("Test responder (expected message mode).");
-        TEST2("Test requester w/out encryption.");
-
-        boost::thread srv_thread(server_main);
-        wait();
-
-        msgtest::request  req;
-        msgtest::response rep;
-
-        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, false));
-
-        req.set_id(1);
-        req.set_login("apushkin");
-
-        bool res = client->send(&req);
-        res = res && client->receive(&rep);
-
-        res = res && (rep.firstname() == "Alexandr");
-        res = res && (rep.lastname()  == "Pushkin" );
-        res = res && (rep.age()       == 210       );
-
-        srv_thread.join();
-
-        CHECK(res);
-    }
-    catch (encmq::exception &)
-    {
-        CHECK(false);
-    }
-
-    // 3-4 //------------------------------------------------------------------
-    try
-    {
-        TEST("Test responder (expected message mode).");
-        TEST2("Test requester with dynamic encryption.");
-
-        boost::thread srv_thread(server_main);
-        wait();
-
-        msgtest::request  req;
-        msgtest::response rep;
-
-        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, true));
-
-        req.set_id(1);
-        req.set_login("apushkin");
-
-        bool res = client->send(&req);
-        res = res && client->receive(&rep);
-
-        res = res && (rep.firstname() == "Alexandr");
-        res = res && (rep.lastname()  == "Pushkin" );
-        res = res && (rep.age()       == 210       );
-
-        srv_thread.join();
-
-        CHECK(res);
-    }
-    catch (encmq::exception &)
-    {
-        CHECK(false);
-    }
-
-    // 5 //--------------------------------------------------------------------
+    // 1 //--------------------------------------------------------------------
     try
     {
         TEST("Test RSA keys generation (fault case).");
@@ -337,12 +259,78 @@ int main ()
         CHECK(false);
     }
 
-    // 6 //--------------------------------------------------------------------
+    // 2 //--------------------------------------------------------------------
     try
     {
         TEST("Test RSA keys generation (success case).");
 
         bool res = encmq::generate_rsa_keys("private.key", "public.key");
+
+        CHECK(res);
+    }
+    catch (encmq::exception &)
+    {
+        CHECK(false);
+    }
+
+    // 3-4 //------------------------------------------------------------------
+    try
+    {
+        TEST("Test responder (expected message mode).");
+        TEST2("Test requester w/out encryption.");
+
+        boost::thread srv_thread(server1_main);
+        wait();
+
+        msgtest::request  req;
+        msgtest::response rep;
+
+        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555));
+
+        req.set_id(1);
+        req.set_login("apushkin");
+
+        bool res = client->send(&req);
+        res = res && client->receive(&rep);
+
+        res = res && (rep.firstname() == "Alexandr");
+        res = res && (rep.lastname()  == "Pushkin" );
+        res = res && (rep.age()       == 210       );
+
+        srv_thread.join();
+
+        CHECK(res);
+    }
+    catch (encmq::exception &)
+    {
+        CHECK(false);
+    }
+
+    // 5-6 //------------------------------------------------------------------
+    try
+    {
+        TEST("Test responder (expected message mode).");
+        TEST2("Test requester with encryption.");
+
+        boost::thread srv_thread(server1_main);
+        wait();
+
+        msgtest::request  req;
+        msgtest::response rep;
+
+        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, "public.key"));
+
+        req.set_id(1);
+        req.set_login("apushkin");
+
+        bool res = client->send(&req);
+        res = res && client->receive(&rep);
+
+        res = res && (rep.firstname() == "Alexandr");
+        res = res && (rep.lastname()  == "Pushkin" );
+        res = res && (rep.age()       == 210       );
+
+        srv_thread.join();
 
         CHECK(res);
     }
@@ -379,6 +367,7 @@ int main ()
         CHECK(e.error() == ENCMQ_ERROR_SSL_RSA);
     }
 
+    // 9-11 //-----------------------------------------------------------------
     {
         boost::thread srv_thread(server3_main);
         wait();
@@ -388,7 +377,7 @@ int main ()
         {
             TEST("Test requester with non-existing RSA public key.");
 
-            auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, true, "bad/public.key"));
+            auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, "bad/public.key"));
 
             CHECK(false);
         }
@@ -402,7 +391,7 @@ int main ()
         {
             TEST("Test requester with invalid RSA public key.");
 
-            auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, true, "private.key"));
+            auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, "private.key"));
 
             CHECK(false);
         }
@@ -411,28 +400,26 @@ int main ()
             CHECK(e.error() == ENCMQ_ERROR_SSL_RSA);
         }
 
-        // 11-12 //------------------------------------------------------------
+        // 11 //---------------------------------------------------------------
         try
         {
-            TEST("Test responder (static encryption without request for the key).");
-            TEST2("Test requester with static encryption and explicitly specified key.");
+            TEST("Test requester with wrong RSA public key.");
 
-            msgtest::request  req;
-            msgtest::response rep;
+            bool res = encmq::generate_rsa_keys("private2.key", "public2.key");
 
-            auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, true, "public.key"));
+            auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, "public2.key"));
+
+            msgtest::request req;
 
             req.set_id(1);
             req.set_login("apushkin");
 
-            bool res = client->send(&req);
-            res = res && client->receive(&rep);
+            res = res && client->send(&req);
+            wait();
 
-            res = res && (rep.firstname() == "Alexandr");
-            res = res && (rep.lastname()  == "Pushkin" );
-            res = res && (rep.age()       == 210       );
+            google::protobuf::Message * msg = client->receive(false);
 
-            srv_thread.join();
+            res = res && (msg == NULL);
 
             CHECK(res);
         }
@@ -440,74 +427,11 @@ int main ()
         {
             CHECK(false);
         }
-    }
-
-    // 13-14 //----------------------------------------------------------------
-    try
-    {
-        TEST("Test responder (static encryption with request for the key).");
-        TEST2("Test requester with static encryption and request for the key.");
-
-        boost::thread srv_thread(server3_main);
-        wait();
-
-        msgtest::request  req;
-        msgtest::response rep;
-
-        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, true));
-
-        req.set_id(1);
-        req.set_login("apushkin");
-
-        bool res = client->send(&req);
-        res = res && client->receive(&rep);
-
-        res = res && (rep.firstname() == "Alexandr");
-        res = res && (rep.lastname()  == "Pushkin" );
-        res = res && (rep.age()       == 210       );
 
         srv_thread.join();
-
-        CHECK(res);
-    }
-    catch (encmq::exception &)
-    {
-        CHECK(false);
     }
 
-    // 15-16 //----------------------------------------------------------------
-    try
-    {
-        TEST("Test responder with wrong RSA private key.");
-        TEST2("Test requester with wrong RSA public key.");
-
-        boost::thread srv_thread(server4_main);
-        wait();
-
-        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, true, "public.key"));
-
-        msgtest::request req;
-
-        req.set_id(1);
-        req.set_login("apushkin");
-
-        bool res = client->send(&req);
-        wait();
-
-        google::protobuf::Message * msg = client->receive(false);
-
-        res = res && (msg == NULL);
-
-        srv_thread.join();
-
-        CHECK(res);
-    }
-    catch (encmq::exception &)
-    {
-        CHECK(false);
-    }
-
-    // 17-18 //----------------------------------------------------------------
+    // 12-13 //----------------------------------------------------------------
     try
     {
         TEST("Test responder (unknown message mode).");
@@ -516,7 +440,7 @@ int main ()
         boost::thread srv_thread(server2_main);
         wait();
 
-        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, true));
+        auto_ptr <encmq::client> client(new encmq::client("127.0.0.1", 5555, "public.key"));
 
         msgtest::request req;
 
@@ -551,13 +475,13 @@ int main ()
         CHECK(false);
     }
 
-    // 19-20 //----------------------------------------------------------------
+    // 14-15 //----------------------------------------------------------------
     try
     {
         TEST("Test publisher.");
         TEST2("Test subscriber.");
 
-        boost::thread pub_thread(publisher_main);
+        boost::thread pub_thread(publisher1_main);
 
         msgtest::response msg;
 
@@ -580,7 +504,7 @@ int main ()
         CHECK(false);
     }
 
-    // 21 //-------------------------------------------------------------------
+    // 16 //-------------------------------------------------------------------
     try
     {
         TEST("Test subscription for all topics.");
@@ -621,7 +545,7 @@ int main ()
         CHECK(false);
     }
 
-    // 22 //-------------------------------------------------------------------
+    // 17 //-------------------------------------------------------------------
     try
     {
         TEST("Test subscription for all topics with specified prefix.");
@@ -661,7 +585,7 @@ int main ()
         CHECK(false);
     }
 
-    // 23 //-------------------------------------------------------------------
+    // 18 //-------------------------------------------------------------------
     try
     {
         TEST("Test subscription for particular topic.");
@@ -700,7 +624,7 @@ int main ()
         CHECK(false);
     }
 
-    // 24 //-------------------------------------------------------------------
+    // 19 //-------------------------------------------------------------------
     try
     {
         TEST("Test subscription for several topics.");
@@ -743,7 +667,7 @@ int main ()
 
     //-------------------------------------------------------------------------
 
-    #define PLANNED 24
+    #define PLANNED 19
 
     cout << "PLANNED:  " << PLANNED << "\n";
     cout << "EXECUTED: " << (passed + failed + blocked) << "\n";
