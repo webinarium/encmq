@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-//  Copyright (C) 2010-2011 Artem Rodygin
+//  Copyright (C) 2010-2012 Artem Rodygin
 //
 //  This file is part of EncMQ.
 //
@@ -27,21 +27,17 @@
 #include <encmq.h>
 #include <internal.h>
 
-// Message definitions
-#include <message.pb.h>
-
 // ZeroMQ
 #include <zmq.h>
 
 // Protocol Buffers
 #include <google/protobuf/message.h>
-#include <google/protobuf/descriptor.h>
+#include <message.pb.h>
 
 // C++ Logging Library
 #include <log4cplus/logger.h>
 
 // OpenSSL
-#include <openssl/bio.h>
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/evp.h>
@@ -59,11 +55,7 @@ namespace encmq
 {
 
 using std::string;
-
 using google::protobuf::Message;
-using google::protobuf::MessageFactory;
-using google::protobuf::Descriptor;
-using google::protobuf::DescriptorPool;
 
 //-----------------------------------------------------------------------------
 //  Constructors/destructors.
@@ -76,60 +68,32 @@ using google::protobuf::DescriptorPool;
  * @throw encmq::exception ENCMQ_ERROR_SSL_AES - error on symmetric key generation.
  * @throw encmq::exception ENCMQ_ERROR_UNKNOWN - unknown error.
  */
-client::client (const char * addr,      /**< [in] Address of the server (e.g. "127.0.0.1").                          */
-                int          port,      /**< [in] Port of the server.                                                */
-                bool         cipher,    /**< [in] Whether to encrypt traffic.                                        */
-                const char * keyfile)   /**< [in] Path to file with public RSA key (ignored when 'cipher' is false). */
+client::client (const char * addr,      /**< [in] Address of the server (e.g. "127.0.0.1").                         */
+                int          port,      /**< [in] Port of the server.                                               */
+                const char * keyfile)   /**< [in] Path to file with public RSA key (NULL means disable encryption). */
   : node(ZMQ_REQ, addr, port),
-    m_key(NULL),
-    m_pubkey(NULL)
+    m_rsa(NULL),
+    m_key(NULL)
 {
     LOG4CPLUS_TRACE(logger, "[encmq::client::client] ENTER");
-    LOG4CPLUS_TRACE(logger, "[encmq::client::client] cipher  = " << cipher);
     LOG4CPLUS_TRACE(logger, "[encmq::client::client] keyfile = " << (keyfile == NULL ? "NULL" : keyfile));
 
-    if (cipher)
+    if (keyfile != NULL)
     {
-        m_pubkey = RSA_new();
+        m_rsa = RSA_new();
 
         try
         {
             // retrieve RSA public key
-            if (keyfile == NULL)
-            {
-                LOG4CPLUS_TRACE(logger, "[encmq::client::client] Request server for RSA public key.");
+            FILE * fp = fopen(keyfile, "r");
 
-                message::rsa_hello rsa_hello;
-                message::rsa_key   rsa_key;
+            if (fp == NULL)
+            throw exception(ENCMQ_ERROR_SSL_RSA);
 
-                this->send(&rsa_hello, true);
-                node::receive(&rsa_key, true);
+            if (PEM_read_RSAPublicKey(fp, &m_rsa, NULL, NULL) == 0)
+            throw exception(ENCMQ_ERROR_SSL_RSA);
 
-                if (rsa_key.key_size() == 0)
-                throw exception(ENCMQ_ERROR_SSL_RSA);
-
-                BIO * mem = BIO_new(BIO_s_mem());
-                BIO_write(mem, rsa_key.key_data().c_str(), rsa_key.key_size());
-
-                if (PEM_read_bio_RSAPublicKey(mem, &m_pubkey, NULL, NULL) == 0)
-                throw exception(ENCMQ_ERROR_SSL_RSA);
-
-                BIO_free(mem);
-            }
-            else
-            {
-                LOG4CPLUS_TRACE(logger, "[encmq::client::client] Load RSA public key from file.");
-
-                FILE * fp = fopen(keyfile, "r");
-
-                if (fp == NULL)
-                throw exception(ENCMQ_ERROR_SSL_RSA);
-
-                if (PEM_read_RSAPublicKey(fp, &m_pubkey, NULL, NULL) == 0)
-                throw exception(ENCMQ_ERROR_SSL_RSA);
-
-                fclose(fp);
-            }
+            fclose(fp);
 
             // generate symmetric key for cipher
             m_key = (unsigned char *) malloc(EVP_MAX_KEY_LENGTH);
@@ -146,7 +110,7 @@ client::client (const char * addr,      /**< [in] Address of the server (e.g. "1
         catch (...)
         {
             LOG4CPLUS_ERROR(logger, "[encmq::client::client] " << get_ssl_error());
-            RSA_free(m_pubkey);
+            RSA_free(m_rsa);
             throw;
         }
     }
@@ -167,9 +131,9 @@ client::~client ()
         free(m_key);
     }
 
-    if (m_pubkey != NULL)
+    if (m_rsa != NULL)
     {
-        RSA_free(m_pubkey);
+        RSA_free(m_rsa);
     }
 
     LOG4CPLUS_TRACE(logger, "[encmq::client::~client] EXIT");
@@ -185,7 +149,7 @@ client::~client ()
  * @return true  - the message was successfully sent.
  * @return false - the message cannot be sent at the moment (in non-blocking mode only).
  *
- * @throw encmq::exception ENCMQ_ERROR_SSL_RSA - error on symmetric key encryption.
+// * @throw encmq::exception ENCMQ_ERROR_SSL_RSA - error on symmetric key encryption.
  * @throw encmq::exception ENCMQ_ERROR_SSL_AES - error on message encryption.
  * @throw encmq::exception ENCMQ_ERROR_UNKNOWN - unknown error.
  */
@@ -194,72 +158,7 @@ bool client::send (const Message * msg,     /**< [in] Message to be sent.       
 {
     LOG4CPLUS_TRACE(logger, "[encmq::client::send] ENTER");
 
-    assert(msg != NULL);
-
-    // envelope of request
-    message::request request;
-
-    // serialize message for the envelope
-    string str;
-    msg->SerializeToString(&str);
-
-    // put MAC and client's key to the envelope
-    if (m_key == NULL)
-    {
-        LOG4CPLUS_TRACE(logger, "[encmq::client::send] Encryption is disabled.");
-
-        request.set_key_size(0);
-        request.set_mac_size(0);
-    }
-    else
-    {
-        LOG4CPLUS_TRACE(logger, "[encmq::client::send] Encryption is enabled.");
-
-        try
-        {
-            // encrypt client's symmetric key
-            string buf(RSA_size(m_pubkey), '\0');
-
-            if (RSA_public_encrypt(EVP_MAX_KEY_LENGTH, m_key, (unsigned char *) buf.c_str(), m_pubkey, ENCMQ_RSA_PADDING) == -1)
-            throw exception(ENCMQ_ERROR_SSL_RSA);
-
-            // serialize encrypted client's symmetric key
-            request.set_key_size(buf.size());
-            request.set_key_data(buf.c_str(), buf.size());
-
-            // add MAC to the message
-            string mac = generate_mac(str);
-
-            request.set_mac_size(mac.size());
-            request.set_mac_data(mac.c_str(), mac.size());
-
-            // encrypt serialized message
-            int num;
-            unsigned char * ptr = (unsigned char *) str.c_str();
-
-            if (EVP_EncryptInit_ex(&m_ctx, EVP_aes_128_ofb(), NULL, m_key, NULL) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-
-            if (EVP_EncryptUpdate(&m_ctx, ptr, &num, ptr, str.size()) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-
-            if (EVP_EncryptFinal_ex(&m_ctx, ptr, &num) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-        }
-        catch (...)
-        {
-            LOG4CPLUS_ERROR(logger, "[encmq::client::send] " << get_ssl_error());
-            throw;
-        }
-    }
-
-    // put serialized message to the envelope
-    request.set_msg_type(msg->GetDescriptor()->full_name());
-    request.set_msg_size(str.size());
-    request.set_msg_data(str.c_str(), str.size());
-
-    // send the envelope
-    return node::send(&request, block);
+    return node::send(msg, block);
 }
 
 /**
@@ -278,66 +177,11 @@ bool client::receive (Message * msg,    /**< [out] Received message.            
 {
     LOG4CPLUS_TRACE(logger, "[encmq::client::receive] ENTER (expected)");
 
-    assert(msg != NULL);
-
-    // envelope of reply
-    message::reply reply;
-
-    // receive the envelope
-    if (!node::receive(&reply, block))
+    if (!node::receive(msg, block))
     {
         LOG4CPLUS_TRACE(logger, "[encmq::client::receive] EXIT = false");
         return false;
     }
-
-    // check message type descriptor
-    if (msg->GetDescriptor()->full_name() != reply.msg_type())
-    {
-        LOG4CPLUS_WARN(logger, "[encmq::client::receive] Received message type is not as expected.");
-        throw exception(ENCMQ_ERROR_WRONG_MESSAGE);
-    }
-
-    // retrieve serialized message from the envelope
-    string str((char *) reply.msg_data().c_str(), reply.msg_size());
-
-    // if encryption is enabled...
-    if (m_key != NULL)
-    {
-        LOG4CPLUS_TRACE(logger, "[encmq::client::receive] Decrypt message.");
-
-        // ...decrypt serialized message
-        try
-        {
-            int num;
-            unsigned char * ptr = (unsigned char *) str.c_str();
-
-            if (EVP_DecryptInit_ex(&m_ctx, EVP_aes_128_ofb(), NULL, m_key, NULL) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-
-            if (EVP_DecryptUpdate(&m_ctx, ptr, &num, ptr, str.size()) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-
-            if (EVP_DecryptFinal_ex(&m_ctx, ptr, &num) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-        }
-        catch (...)
-        {
-            LOG4CPLUS_ERROR(logger, "[encmq::client::receive] " << get_ssl_error());
-            throw;
-        }
-
-        // ...verify MAC of the message
-        string mac((char *) reply.mac_data().c_str(), reply.mac_size());
-
-        if (generate_mac(str) != mac)
-        {
-            LOG4CPLUS_WARN(logger, "[encmq::client::receive] Unverified MAC.");
-            throw exception(ENCMQ_ERROR_WRONG_MAC);
-        }
-    }
-
-    // unserialize a message from the envelope
-    msg->ParseFromString(str);
 
     LOG4CPLUS_TRACE(logger, "[encmq::client::receive] EXIT = true");
     return true;
@@ -358,71 +202,139 @@ Message * client::receive (bool block)  /**< [in] Whether to block thread until 
 {
     LOG4CPLUS_TRACE(logger, "[encmq::client::receive] ENTER (unknown)");
 
-    // envelope of reply
-    message::reply reply;
+    return node::receive(block);
+}
 
-    // receive the envelope
-    if (!node::receive(&reply, block))
-    {
-        LOG4CPLUS_TRACE(logger, "[encmq::client::receive] EXIT = NULL");
-        return NULL;
-    }
+//-----------------------------------------------------------------------------
+//  Protected interface.
+//-----------------------------------------------------------------------------
 
-    // retrieve serialized message from the envelope
-    string str((char *) reply.msg_data().c_str(), reply.msg_size());
+/**
+ * Puts client's symmetric key to the envelope.
+ *
+ * @param [in] msg Pointer to the envelope just prepared for sending.
+ * @return true  - success.
+ * @return false - failure.
+ */
+bool client::before_send (Message * msg)
+{
+    LOG4CPLUS_TRACE(logger, "[encmq::client::before_send] ENTER");
 
-    // if encryption is enabled...
     if (m_key != NULL)
     {
-        LOG4CPLUS_TRACE(logger, "[encmq::client::receive] Decrypt message.");
+        message::envelope * envelope = (message::envelope *) msg;
 
-        // ...decrypt serialized message
-        try
+        // encrypt client's symmetric key
+        string buf(RSA_size(m_rsa), '\0');
+
+        if (RSA_public_encrypt(EVP_MAX_KEY_LENGTH, m_key, (unsigned char *) buf.c_str(), m_rsa, ENCMQ_RSA_PADDING) == -1)
         {
-            int num;
-            unsigned char * ptr = (unsigned char *) str.c_str();
-
-            if (EVP_DecryptInit_ex(&m_ctx, EVP_aes_128_ofb(), NULL, m_key, NULL) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-
-            if (EVP_DecryptUpdate(&m_ctx, ptr, &num, ptr, str.size()) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-
-            if (EVP_DecryptFinal_ex(&m_ctx, ptr, &num) == 0)
-            throw exception(ENCMQ_ERROR_SSL_AES);
-        }
-        catch (...)
-        {
-            LOG4CPLUS_ERROR(logger, "[encmq::client::receive] " << get_ssl_error());
-            throw;
+            LOG4CPLUS_ERROR(logger, "[encmq::client::before_send] " << get_ssl_error());
+            LOG4CPLUS_TRACE(logger, "[encmq::client::before_send] EXIT = false");
+            return false;
         }
 
-        // ...verify MAC of the message
-        string mac((char *) reply.mac_data().c_str(), reply.mac_size());
-
-        if (generate_mac(str) != mac)
-        {
-            LOG4CPLUS_WARN(logger, "[encmq::client::receive] Unverified MAC.");
-            throw exception(ENCMQ_ERROR_WRONG_MAC);
-        }
+        // serialize encrypted client's symmetric key
+        string key(buf.c_str(), buf.size());
+        envelope->SetExtension(message::key, key);
     }
 
-    // retrieve message type from the envelope
-    const Descriptor * desc = DescriptorPool::generated_pool()->FindMessageTypeByName(reply.msg_type());
+    LOG4CPLUS_TRACE(logger, "[encmq::client::before_send] EXIT = true");
+    return true;
+}
 
-    if (desc == NULL)
+/**
+ * Stub implementation.
+ *
+ * @return Always true.
+ */
+bool client::after_receive (Message *)
+{
+    return true;
+}
+
+/**
+ * Encrypts serialized message.
+ *
+ * @param [in] msg_data Custom serialized message.
+ * @param [in] msg_size Size of the serialized message.
+ * @return true  - message was successfully encrypted.
+ * @return false - error is occured.
+ */
+bool client::encrypt (unsigned char * msg_data, int msg_size)
+{
+    LOG4CPLUS_TRACE(logger, "[encmq::client::encrypt] ENTER");
+
+    if (m_key != NULL)
     {
-        LOG4CPLUS_WARN(logger,  "[encmq::server::receive] Message type cannot be found by specified name.");
-        LOG4CPLUS_TRACE(logger, "[encmq::client::receive] EXIT = NULL");
-        return NULL;
+        int num;
+
+        if (EVP_EncryptInit_ex(&m_ctx, EVP_aes_128_ofb(), NULL, m_key, NULL) == 0)
+        {
+            LOG4CPLUS_ERROR(logger, "[encmq::client::encrypt] " << get_ssl_error());
+            LOG4CPLUS_TRACE(logger, "[encmq::client::encrypt] EXIT = false");
+            return false;
+        }
+
+        if (EVP_EncryptUpdate(&m_ctx, msg_data, &num, msg_data, msg_size) == 0)
+        {
+            LOG4CPLUS_ERROR(logger, "[encmq::client::encrypt] " << get_ssl_error());
+            LOG4CPLUS_TRACE(logger, "[encmq::client::encrypt] EXIT = false");
+            return false;
+        }
+
+        if (EVP_EncryptFinal_ex(&m_ctx, msg_data, &num) == 0)
+        {
+            LOG4CPLUS_ERROR(logger, "[encmq::client::encrypt] " << get_ssl_error());
+            LOG4CPLUS_TRACE(logger, "[encmq::client::encrypt] EXIT = false");
+            return false;
+        }
     }
 
-    // unserialize a message from the envelope
-    Message * msg = (MessageFactory::generated_factory()->GetPrototype(desc))->New();
-    msg->ParseFromString(str);
+    LOG4CPLUS_TRACE(logger, "[encmq::client::encrypt] EXIT = true");
+    return true;
+}
 
-    LOG4CPLUS_TRACE(logger, "[encmq::client::receive] EXIT = " << reply.msg_type());
-    return msg;
+/**
+ * Decrypts serialized message.
+ *
+ * @param [in] msg_data Custom serialized message.
+ * @param [in] msg_size Size of the serialized message.
+ * @return true  - message was successfully decrypted.
+ * @return false - error is occured.
+ */
+bool client::decrypt (unsigned char * msg_data, int msg_size)
+{
+    LOG4CPLUS_TRACE(logger, "[encmq::client::decrypt] ENTER");
+
+    if (m_key != NULL)
+    {
+        int num;
+
+        if (EVP_DecryptInit_ex(&m_ctx, EVP_aes_128_ofb(), NULL, m_key, NULL) == 0)
+        {
+            LOG4CPLUS_ERROR(logger, "[encmq::client::decrypt] " << get_ssl_error());
+            LOG4CPLUS_TRACE(logger, "[encmq::client::decrypt] EXIT = false");
+            return false;
+        }
+
+        if (EVP_DecryptUpdate(&m_ctx, msg_data, &num, msg_data, msg_size) == 0)
+        {
+            LOG4CPLUS_ERROR(logger, "[encmq::client::decrypt] " << get_ssl_error());
+            LOG4CPLUS_TRACE(logger, "[encmq::client::decrypt] EXIT = false");
+            return false;
+        }
+
+        if (EVP_DecryptFinal_ex(&m_ctx, msg_data, &num) == 0)
+        {
+            LOG4CPLUS_ERROR(logger, "[encmq::client::decrypt] " << get_ssl_error());
+            LOG4CPLUS_TRACE(logger, "[encmq::client::decrypt] EXIT = false");
+            return false;
+        }
+    }
+
+    LOG4CPLUS_TRACE(logger, "[encmq::client::decrypt] EXIT = true");
+    return true;
 }
 
 }

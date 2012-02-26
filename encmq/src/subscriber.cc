@@ -151,4 +151,54 @@ void subscriber::unsubscribe (const char * topic)   /**< [in] Topic(s) to unsubs
     LOG4CPLUS_TRACE(logger, "[encmq::subscriber::unsubscribe] EXIT");
 }
 
+//-----------------------------------------------------------------------------
+//  Protected interface.
+//-----------------------------------------------------------------------------
+
+/**
+ * Stub implementation.
+ *
+ * @return Always true.
+ */
+bool subscriber::before_send (Message *)
+{
+    return true;
+}
+
+/**
+ * Stub implementation.
+ *
+ * @return Always true.
+ */
+bool subscriber::after_receive (Message *)
+{
+    return true;
+}
+
+/**
+ * Encrypts serialized message.
+ *
+ * @param [in] msg_data Custom serialized message.
+ * @param [in] msg_size Size of the serialized message.
+ * @return true  - message was successfully encrypted.
+ * @return false - error is occured.
+ */
+bool subscriber::encrypt (unsigned char *, int)
+{
+    return true;
+}
+
+/**
+ * Decrypts serialized message.
+ *
+ * @param [in] msg_data Custom serialized message.
+ * @param [in] msg_size Size of the serialized message.
+ * @return true  - message was successfully decrypted.
+ * @return false - error is occured.
+ */
+bool subscriber::decrypt (unsigned char *, int)
+{
+    return true;
+}
+
 }
