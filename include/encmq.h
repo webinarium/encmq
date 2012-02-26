@@ -132,11 +132,11 @@ protected:
 
 protected:
 
-    virtual bool before_send   (Message * msg) = 0;
-    virtual bool after_receive (Message * msg) = 0;
+    virtual bool before_send   (Message * msg) = 0;                     /**< @private */
+    virtual bool after_receive (Message * msg) = 0;                     /**< @private */
 
-    virtual bool encrypt (unsigned char * msg_data, int msg_size) = 0;
-    virtual bool decrypt (unsigned char * msg_data, int msg_size) = 0;
+    virtual bool encrypt (unsigned char * msg_data, int msg_size) = 0;  /**< @private */
+    virtual bool decrypt (unsigned char * msg_data, int msg_size) = 0;  /**< @private */
 
 protected:
 
