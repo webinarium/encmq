@@ -45,6 +45,7 @@
 //  For backward compatibility btw ZeroMQ 2 and ZeroMQ 3
 //-----------------------------------------------------------------------------
 
+/** ZeroMQ's standard error code. */
 #define ZMQ_ERROR       -1
 
 #if ZMQ_VERSION_MAJOR == 2
