@@ -2,8 +2,8 @@
 RELEASE NOTES
 -------------------------------------------------------------------------------
 
-Version: 1.0.0
-Date:    2011-05-15
+Version: 1.1.0
+Date:    2012-02-27
 
 -------------------------------------------------------------------------------
 BUILD & USAGE
@@ -26,6 +26,6 @@ TESTED WITH
 
 Operating System         Compiler              OpenSSL   Boost
 
-Windows XP (32 bit)      Visual Studio 2008    0.9.8r    1.43.0
-Linux 2.6.31 (32 bit)    GCC 4.4.1             0.9.8g    1.38.1
-Linux 2.6.38 (64 bit)    GCC 4.5.2             0.9.8o    1.42.0
+Windows XP (32 bit)      Visual Studio 2008    0.9.8t    1.37.0
+Windows XP (32 bit)      Visual Studio 2010    1.0.0g    1.43.0
+Linux 2.6.35 (64 bit)    GCC 4.4.5             0.9.8o    1.42.0
