@@ -38,7 +38,7 @@
 
 // System Libraries
 #if defined(WIN32)
-#include <WinBase.h>
+#include <Windows.h>
 #else
 #include <unistd.h>
 #endif
