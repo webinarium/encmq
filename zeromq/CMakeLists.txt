@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  Copyright (C) 2009-2011 Artem Rodygin
+#  Copyright (C) 2009-2012 Artem Rodygin
 #
 #  This file is part of EncMQ.
 #
@@ -80,6 +80,7 @@ else (MSVC)
 
     CHECK_FUNCTION_EXISTS(clock_gettime HAVE_CLOCK_GETTIME)
     CHECK_FUNCTION_EXISTS(freeifaddrs   HAVE_FREEIFADDRS)
+    CHECK_FUNCTION_EXISTS(gethrtime     HAVE_GETHRTIME)
     CHECK_FUNCTION_EXISTS(getifaddrs    HAVE_GETIFADDRS)
     CHECK_FUNCTION_EXISTS(gettimeofday  HAVE_GETTIMEOFDAY)
     CHECK_FUNCTION_EXISTS(memset        HAVE_MEMSET)

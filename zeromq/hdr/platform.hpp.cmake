@@ -18,6 +18,9 @@
 /* Define to 1 if you have the `freeifaddrs' function. */
 #cmakedefine HAVE_FREEIFADDRS 1
 
+/* Define to 1 if you have the `gethrtime' function. */
+#cmakedefine HAVE_GETHRTIME 1
+
 /* Define to 1 if you have the `getifaddrs' function. */
 #cmakedefine HAVE_GETIFADDRS 1
 
