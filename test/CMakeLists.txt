@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  Copyright (C) 2010-2011 Artem Rodygin
+#  Copyright (C) 2010-2012 Artem Rodygin
 #
 #  This file is part of EncMQ.
 #
@@ -44,8 +44,8 @@ endif (WIN32)
 
 include_directories(${Boost_INCLUDE_DIRS}
                     ${OPENSSL_INCLUDE_DIR}
-                    ${CMAKE_BINARY_DIR}/include
-                    ${CMAKE_BINARY_DIR}/build/include
+                    ${PROJECT_SOURCE_DIR}/../include
+                    ${PROJECT_BINARY_DIR}/../include
                     hdr)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

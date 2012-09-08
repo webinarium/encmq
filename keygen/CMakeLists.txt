@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  Copyright (C) 2011 Artem Rodygin
+#  Copyright (C) 2011-2012 Artem Rodygin
 #
 #  This file is part of EncMQ.
 #
@@ -31,8 +31,8 @@ list(APPEND ${PROJECT_NAME}_SRC ${OPENSSL_INCLUDE_DIR}/openssl/applink.c)
 endif (WIN32)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
-                    ${CMAKE_BINARY_DIR}/include
-                    ${CMAKE_BINARY_DIR}/build/include)
+                    ${PROJECT_SOURCE_DIR}/../include
+                    ${PROJECT_BINARY_DIR}/../include)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 

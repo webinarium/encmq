@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  Copyright (C) 2009 Artem Rodygin
+#  Copyright (C) 2009-2012 Artem Rodygin
 #
 #  This file is part of EncMQ.
 #
@@ -31,8 +31,8 @@ aux_source_directory(src/google/protobuf/compiler/java   ${PROJECT_NAME}_SRC)
 aux_source_directory(src/google/protobuf/compiler/python ${PROJECT_NAME}_SRC)
 endif (MSVC)
 
-include_directories(${CMAKE_BINARY_DIR}/include
-                    ${CMAKE_BINARY_DIR}/build/include/protobuf)
+include_directories(${PROJECT_SOURCE_DIR}/../include
+                    ${PROJECT_BINARY_DIR}/../include/protobuf)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 

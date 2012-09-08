@@ -24,7 +24,7 @@ cmake_minimum_required(VERSION 2.6)
 
 if (MSVC)
 
-    configure_file(hdr/platform.hpp.msvc ${CMAKE_BINARY_DIR}/build/include/zeromq/platform.hpp COPYONLY)
+    configure_file(hdr/platform.hpp.msvc ${PROJECT_BINARY_DIR}/../include/zeromq/platform.hpp COPYONLY)
 
     add_definitions(-W0)
 
@@ -249,14 +249,14 @@ else (MSVC)
     set(RETSIGTYPE "void")
     endif (RETSIGTYPE_RES)
 
-    configure_file(hdr/platform.hpp.cmake ${CMAKE_BINARY_DIR}/build/include/zeromq/platform.hpp)
+    configure_file(hdr/platform.hpp.cmake ${PROJECT_BINARY_DIR}/../include/zeromq/platform.hpp)
 
 endif (MSVC)
 
 aux_source_directory(src ${PROJECT_NAME}_SRC)
 
-include_directories(${CMAKE_BINARY_DIR}/include
-                    ${CMAKE_BINARY_DIR}/build/include/zeromq
+include_directories(${PROJECT_SOURCE_DIR}/../include
+                    ${PROJECT_BINARY_DIR}/../include/zeromq
                     ${PROJECT_SOURCE_DIR})
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SRC})

@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-#  Copyright (C) 2010-2011 Artem Rodygin
+#  Copyright (C) 2010-2012 Artem Rodygin
 #
 #  This file is part of EncMQ.
 #
@@ -25,8 +25,8 @@ cmake_minimum_required(VERSION 2.6)
 find_package(OpenSSL QUIET REQUIRED)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
-                    ${CMAKE_BINARY_DIR}/include
-                    ${CMAKE_BINARY_DIR}/build/include
+                    ${PROJECT_SOURCE_DIR}/../include
+                    ${PROJECT_BINARY_DIR}/../include
                     hdr)
 
 aux_source_directory(src ${PROJECT_NAME}_SRC)
@@ -39,7 +39,7 @@ endif (WIN32)
 add_library(${PROJECT_NAME} STATIC
             ${${PROJECT_NAME}_SRC}
             ${${PROJECT_NAME}_HDR}
-            ${CMAKE_BINARY_DIR}/include/encmq.h)
+            ${PROJECT_SOURCE_DIR}/../include/encmq.h)
 
 add_dependencies(${PROJECT_NAME}
                  log4cplus
