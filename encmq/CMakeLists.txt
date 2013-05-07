@@ -25,6 +25,7 @@ cmake_minimum_required(VERSION 2.6)
 find_package(OpenSSL QUIET REQUIRED)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
+                    ${PROJECT_SOURCE_DIR}/zeromq/include
                     ${PROJECT_SOURCE_DIR}/../include
                     ${PROJECT_BINARY_DIR}/../include
                     hdr)
