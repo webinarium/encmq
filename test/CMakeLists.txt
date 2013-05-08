@@ -25,7 +25,7 @@ cmake_minimum_required(VERSION 2.6)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_LIBS   ON)
 
-find_package(Boost 1.29.0 QUIET COMPONENTS thread)
+find_package(Boost 1.29.0 QUIET COMPONENTS date_time thread)
 
 if (NOT Boost_FOUND)
 message(STATUS "Target '${PROJECT_NAME}' will not be configured, because Boost libraries are not found")
