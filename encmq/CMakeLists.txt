@@ -24,13 +24,13 @@ cmake_minimum_required(VERSION 2.6)
 
 find_package(OpenSSL QUIET REQUIRED)
 
-if (NOT ZeroMQ_LIBRARIES)
-set(ZeroMQ_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../zeromq/include)
-set(ZeroMQ_LIBRARIES   zmq)
-endif (NOT ZeroMQ_LIBRARIES)
+if (NOT ZMQ_FOUND)
+set(ZMQ_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../zeromq/include)
+set(ZMQ_LIBRARIES   zmq)
+endif (NOT ZMQ_FOUND)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
-                    ${ZeroMQ_INCLUDE_DIR}
+                    ${ZMQ_INCLUDE_DIR}
                     ${PROJECT_SOURCE_DIR}/../include
                     ${PROJECT_BINARY_DIR}/../include
                     hdr)
@@ -54,7 +54,7 @@ add_dependencies(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
                       ${OPENSSL_LIBRARIES}
-                      ${ZeroMQ_LIBRARIES}
+                      ${ZMQ_LIBRARIES}
                       log4cplus
                       protobuf)
 

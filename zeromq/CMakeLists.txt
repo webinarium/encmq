@@ -24,6 +24,11 @@ cmake_minimum_required(VERSION 2.6)
 
 find_package(ZeroMQ 2.0)
 
+set(ZMQ_FOUND       ${ZeroMQ_FOUND}       PARENT_SCOPE)
+set(ZMQ_VERSION     ${ZeroMQ_VERSION}     PARENT_SCOPE)
+set(ZMQ_INCLUDE_DIR ${ZeroMQ_INCLUDE_DIR} PARENT_SCOPE)
+set(ZMQ_LIBRARIES   ${ZeroMQ_LIBRARIES}   PARENT_SCOPE)
+
 if (NOT ZeroMQ_FOUND)
 
     if (MSVC)
