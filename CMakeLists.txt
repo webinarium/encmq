@@ -34,10 +34,11 @@ endif (MSVC)
 
 message("---------------------------------------------")
 
-add_subdirectory(log4cplus build/log4cplus)
-add_subdirectory(protobuf  build/protobuf)
-add_subdirectory(protoc    build/protoc)
-add_subdirectory(zeromq    build/zeromq)
-add_subdirectory(encmq     build/encmq)
-add_subdirectory(keygen    build/keygen)
-add_subdirectory(test      build/test)
+add_subdirectory(vendor/log4cplus build/log4cplus)
+add_subdirectory(vendor/protobuf  build/protobuf)
+add_subdirectory(vendor/protoc    build/protoc)
+add_subdirectory(vendor/zeromq    build/zeromq)
+
+add_subdirectory(encmq  build/encmq)
+add_subdirectory(keygen build/keygen)
+add_subdirectory(test   build/test)

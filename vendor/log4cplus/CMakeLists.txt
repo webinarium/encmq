@@ -73,7 +73,7 @@ find_package(Threads)
 
 if (UNIX)
 
-    set(HEADER_WARNING "Do not edit. Generated from \"log4cplus/include/log4cplus/config/defines.hxx.in\" by cmake.")
+    set(HEADER_WARNING "Do not edit. Generated from \"vendor/log4cplus/include/log4cplus/config/defines.hxx.in\" by cmake.")
 
     include(CheckIncludeFile)
     include(CheckFunctionExists)

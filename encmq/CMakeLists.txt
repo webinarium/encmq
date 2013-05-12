@@ -25,14 +25,14 @@ cmake_minimum_required(VERSION 2.6)
 find_package(OpenSSL QUIET REQUIRED)
 
 if (NOT ZMQ_FOUND)
-set(ZMQ_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../zeromq/include)
+set(ZMQ_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/../vendor/zeromq/include)
 set(ZMQ_LIBRARIES   zmq)
 endif (NOT ZMQ_FOUND)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
                     ${ZMQ_INCLUDE_DIR}
-                    ${PROJECT_SOURCE_DIR}/../log4cplus/include
-                    ${PROJECT_SOURCE_DIR}/../protobuf/include
+                    ${PROJECT_SOURCE_DIR}/../vendor/log4cplus/include
+                    ${PROJECT_SOURCE_DIR}/../vendor/protobuf/include
                     ${PROJECT_SOURCE_DIR}/../include
                     ${PROJECT_BINARY_DIR}/../include
                     hdr)

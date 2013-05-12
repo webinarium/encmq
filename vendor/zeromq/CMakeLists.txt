@@ -42,7 +42,7 @@ if (NOT ZeroMQ_FOUND)
 
     else (MSVC)
 
-        set(HEADER_WARNING "Do not edit. Generated from \"zeromq/hdr/platform.hpp.cmake\" by cmake.")
+        set(HEADER_WARNING "Do not edit. Generated from \"vendor/zeromq/hdr/platform.hpp.cmake\" by cmake.")
 
         include(CheckIncludeFile)
         include(CheckFunctionExists)

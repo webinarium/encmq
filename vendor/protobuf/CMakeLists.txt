@@ -28,7 +28,7 @@ if (MSVC)
 
 else (MSVC)
 
-    set(HEADER_WARNING "Do not edit. Generated from \"protobuf/hdr/config.h.cmake\" by cmake.")
+    set(HEADER_WARNING "Do not edit. Generated from \"vendor/protobuf/hdr/config.h.cmake\" by cmake.")
 
     include(CheckIncludeFile)
     include(CheckFunctionExists)
