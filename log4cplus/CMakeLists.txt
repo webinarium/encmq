@@ -73,7 +73,7 @@ find_package(Threads)
 
 if (UNIX)
 
-    set(HEADER_WARNING "Do not edit. Generated from \"include/log4cplus/config/defines.hxx.in\" by cmake.")
+    set(HEADER_WARNING "Do not edit. Generated from \"log4cplus/include/log4cplus/config/defines.hxx.in\" by cmake.")
 
     include(CheckIncludeFile)
     include(CheckFunctionExists)
@@ -127,12 +127,12 @@ if (UNIX)
     set(LOG4CPLUS_DECLSPEC_EXPORT "/**/")
     set(LOG4CPLUS_DECLSPEC_IMPORT "/**/")
 
-    configure_file(${PROJECT_SOURCE_DIR}/../include/log4cplus/config/defines.hxx.in
+    configure_file(${PROJECT_SOURCE_DIR}/include/log4cplus/config/defines.hxx.in
                    ${PROJECT_BINARY_DIR}/../include/log4cplus/config/defines.hxx)
 
 endif (UNIX)
 
-include_directories(${PROJECT_SOURCE_DIR}/../include
+include_directories(${PROJECT_SOURCE_DIR}/include
                     ${PROJECT_BINARY_DIR}/../include)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)

@@ -31,6 +31,7 @@ endif (NOT ZMQ_FOUND)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
                     ${ZMQ_INCLUDE_DIR}
+                    ${PROJECT_SOURCE_DIR}/../log4cplus/include
                     ${PROJECT_SOURCE_DIR}/../include
                     ${PROJECT_BINARY_DIR}/../include
                     hdr)

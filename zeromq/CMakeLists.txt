@@ -281,7 +281,7 @@ if (NOT ZeroMQ_FOUND)
 
     aux_source_directory(src ${PROJECT_NAME}_SRC)
 
-    include_directories(${PROJECT_SOURCE_DIR}/../include
+    include_directories(${PROJECT_SOURCE_DIR}/include
                         ${PROJECT_BINARY_DIR}/../include/zeromq
                         ${PROJECT_SOURCE_DIR})
 
