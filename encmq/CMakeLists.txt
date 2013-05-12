@@ -33,7 +33,7 @@ include_directories(${OPENSSL_INCLUDE_DIR}
                     ${ZMQ_INCLUDE_DIR}
                     ${PROJECT_SOURCE_DIR}/../vendor/log4cplus/include
                     ${PROJECT_SOURCE_DIR}/../vendor/protobuf/include
-                    ${PROJECT_SOURCE_DIR}/../include
+                    ${PROJECT_SOURCE_DIR}/../encmq/include
                     ${PROJECT_BINARY_DIR}/../include
                     hdr)
 
@@ -47,7 +47,7 @@ endif (WIN32)
 add_library(${PROJECT_NAME} STATIC
             ${${PROJECT_NAME}_SRC}
             ${${PROJECT_NAME}_HDR}
-            ${PROJECT_SOURCE_DIR}/../include/encmq.h)
+            ${PROJECT_SOURCE_DIR}/../encmq/include/encmq.h)
 
 add_dependencies(${PROJECT_NAME}
                  log4cplus

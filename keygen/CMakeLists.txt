@@ -32,7 +32,7 @@ endif (WIN32)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
                     ${PROJECT_SOURCE_DIR}/../vendor/protobuf/include
-                    ${PROJECT_SOURCE_DIR}/../include
+                    ${PROJECT_SOURCE_DIR}/../encmq/include
                     ${PROJECT_BINARY_DIR}/../include)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
