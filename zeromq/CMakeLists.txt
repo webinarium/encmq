@@ -66,7 +66,6 @@ if (NOT ZeroMQ_FOUND)
         CHECK_INCLUDE_FILE(stdlib.h         HAVE_STDLIB_H)
         CHECK_INCLUDE_FILE(string.h         HAVE_STRING_H)
         CHECK_INCLUDE_FILE(strings.h        HAVE_STRINGS_H)
-        CHECK_INCLUDE_FILE(sys/eventfd.h    HAVE_SYS_EVENTFD_H)
         CHECK_INCLUDE_FILE(sys/socket.h     HAVE_SYS_SOCKET_H)
         CHECK_INCLUDE_FILE(sys/stat.h       HAVE_SYS_STAT_H)
         CHECK_INCLUDE_FILE(sys/time.h       HAVE_SYS_TIME_H)
@@ -75,6 +74,10 @@ if (NOT ZeroMQ_FOUND)
         CHECK_INCLUDE_FILE(unistd.h         HAVE_UNISTD_H)
         CHECK_INCLUDE_FILE(windows.h        HAVE_WINDOWS_H)
 
+        if (HAVE_IFADDRS_H)
+        set(ZMQ_HAVE_IFADDRS TRUE)
+        endif (HAVE_IFADDRS_H)
+
         if (HAVE_STDDEF_H AND HAVE_STDINT_H)
         set(STDC_HEADERS TRUE)
         endif (HAVE_STDDEF_H AND HAVE_STDINT_H)
@@ -82,10 +85,6 @@ if (NOT ZeroMQ_FOUND)
         if (HAVE_SYS_TIME_H AND HAVE_TIME_H)
         set(TIME_WITH_SYS_TIME TRUE)
         endif (HAVE_SYS_TIME_H AND HAVE_TIME_H)
-
-        if (HAVE_SYS_EVENTFD_H)
-        set(ZMQ_HAVE_EVENTFD TRUE)
-        endif (HAVE_SYS_EVENTFD_H)
 
         CHECK_FUNCTION_EXISTS(clock_gettime HAVE_CLOCK_GETTIME)
         CHECK_FUNCTION_EXISTS(freeifaddrs   HAVE_FREEIFADDRS)
@@ -97,8 +96,6 @@ if (NOT ZeroMQ_FOUND)
         CHECK_FUNCTION_EXISTS(socket        HAVE_SOCKET)
 
         CHECK_LIBRARY_EXISTS("pthread" "pthread_create" "" HAVE_LIBPTHREAD)
-        CHECK_LIBRARY_EXISTS("stdc++"  "malloc"         "" HAVE_LIBSTDC__)
-        CHECK_LIBRARY_EXISTS("m"       "matherr"        "" HAVE_LIBM)
 
         CHECK_SYMBOL_EXISTS("SOCK_CLOEXEC" sys/socket.h HAVE_SOCK_CLOEXEC)
         CHECK_SYMBOL_EXISTS("_Bool" stdbool.h HAVE__BOOL)
@@ -121,16 +118,10 @@ if (NOT ZeroMQ_FOUND)
             message(FATAL_ERROR "cannot link with -luuid, install uuid-dev.")
             endif (NOT HAVE_LIBUUID)
 
-        elseif (HOST_OS MATCHES android)
-
-            set(ZMQ_HAVE_ANDROID TRUE)
-
         elseif (HOST_OS MATCHES solaris)
 
-            set(ZMQ_HAVE_SOLARIS  TRUE)
-            set(ZMQ_FORCE_MUTEXES TRUE)
+            set(ZMQ_HAVE_SOLARIS TRUE)
 
-            add_definitions(-D_POSIX_C_SOURCE=200112L)
             add_definitions(-D_PTHREADS)
 
             CHECK_LIBRARY_EXISTS("socket" "socket"        "" HAVE_LIBSOCKET)
@@ -141,6 +132,21 @@ if (NOT ZeroMQ_FOUND)
             if (NOT HAVE_LIBUUID)
             message(FATAL_ERROR "cannot link with -luuid, install uuid-dev.")
             endif (NOT HAVE_LIBUUID)
+
+            set(HAS_ATOMIC_SRC "
+                #include <atomic.h>
+                int main ()
+                {
+                    uint32_t value;
+                    atomic_cas_32 (&value, 0, 0);
+                    return 0;
+                }")
+
+            CHECK_CXX_SOURCE_COMPILES("${HAS_ATOMIC_SRC}" HAS_ATOMIC_RES)
+
+            if (NOT HAS_ATOMIC_RES)
+            set(ZMQ_FORCE_MUTEXES TRUE)
+            endif (NOT HAS_ATOMIC_RES)
 
         elseif (HOST_OS MATCHES freebsd)
 
@@ -158,9 +164,23 @@ if (NOT ZeroMQ_FOUND)
         elseif (HOST_OS MATCHES netbsd)
 
             set(ZMQ_HAVE_NETBSD   TRUE)
-            set(ZMQ_FORCE_MUTEXES TRUE)
 
             add_definitions(-D_NETBSD_SOURCE)
+
+            set(HAS_ATOMIC_SRC "
+                #include <atomic.h>
+                int main ()
+                {
+                    uint32_t value;
+                    atomic_cas_32 (&value, 0, 0);
+                    return 0;
+                }")
+
+            CHECK_CXX_SOURCE_COMPILES("${HAS_ATOMIC_SRC}" HAS_ATOMIC_RES)
+
+            if (NOT HAS_ATOMIC_RES)
+            set(ZMQ_FORCE_MUTEXES TRUE)
+            endif (NOT HAS_ATOMIC_RES)
 
         elseif (HOST_OS MATCHES openbsd)
 
@@ -196,7 +216,7 @@ if (NOT ZeroMQ_FOUND)
             set(ZMQ_HAVE_WINDOWS TRUE)
             set(ZMQ_HAVE_MINGW32 TRUE)
 
-            add_definitions(-std=c99)
+            add_definitions(-Wno-long-long)
 
             CHECK_LIBRARY_EXISTS("ws2_32"   "main" "" HAVE_LIBWS2_32)
             CHECK_LIBRARY_EXISTS("rpcrt4"   "main" "" HAVE_LIBRPCRT4)
@@ -228,12 +248,9 @@ if (NOT ZeroMQ_FOUND)
 
         else (HOST_OS MATCHES linux)
 
-            message(FATAL_ERROR "Not supported os: ${CMAKE_HOST_SYSTEM_NAME}")
+            message(FATAL_ERROR "Unsupported system: ${CMAKE_HOST_SYSTEM_NAME}")
 
         endif (HOST_OS MATCHES linux)
-
-        CHECK_INCLUDE_FILE(sys/eventfd.h    ZMQ_HAVE_EVENTFD)
-        CHECK_INCLUDE_FILE(ifaddrs.h        ZMQ_HAVE_IFADDRS)
 
         if (WIN32)
         set(LT_OBJDIR "_libs/")

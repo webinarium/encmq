@@ -105,9 +105,6 @@
 /* Define to 1 if you have the <string.h> header file. */
 #cmakedefine HAVE_STRING_H 1
 
-/* Define to 1 if you have the <sys/eventfd.h> header file. */
-#cmakedefine HAVE_SYS_EVENTFD_H 1
-
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #cmakedefine HAVE_SYS_SOCKET_H 1
 
@@ -149,7 +146,7 @@
 #define PACKAGE_NAME "zeromq"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "zeromq 2.1.11"
+#define PACKAGE_STRING "zeromq 2.2.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "zeromq"
@@ -158,7 +155,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.1.11"
+#define PACKAGE_VERSION "2.2.0"
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE ${RETSIGTYPE}
@@ -170,7 +167,7 @@
 #cmakedefine TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define VERSION "2.1.11"
+#define VERSION "2.2.0"
 
 /* Force to use mutexes */
 #cmakedefine ZMQ_FORCE_MUTEXES 1
@@ -183,9 +180,6 @@
 
 /* Have Cygwin */
 #cmakedefine ZMQ_HAVE_CYGWIN 1
-
-/* Have eventfd extension. */
-#cmakedefine ZMQ_HAVE_EVENTFD 1
 
 /* Have FreeBSD OS */
 #cmakedefine ZMQ_HAVE_FREEBSD 1
