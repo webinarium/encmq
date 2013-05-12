@@ -196,7 +196,7 @@ aux_source_directory(src/google/protobuf/compiler ${PROJECT_NAME}_SRC)
 aux_source_directory(src/google/protobuf/io       ${PROJECT_NAME}_SRC)
 aux_source_directory(src/google/protobuf/stubs    ${PROJECT_NAME}_SRC)
 
-include_directories(${PROJECT_SOURCE_DIR}/../include
+include_directories(${PROJECT_SOURCE_DIR}/include
                     ${PROJECT_BINARY_DIR}/../include/protobuf)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)

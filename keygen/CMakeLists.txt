@@ -31,6 +31,7 @@ list(APPEND ${PROJECT_NAME}_SRC ${OPENSSL_INCLUDE_DIR}/openssl/applink.c)
 endif (WIN32)
 
 include_directories(${OPENSSL_INCLUDE_DIR}
+                    ${PROJECT_SOURCE_DIR}/../protobuf/include
                     ${PROJECT_SOURCE_DIR}/../include
                     ${PROJECT_BINARY_DIR}/../include)
 

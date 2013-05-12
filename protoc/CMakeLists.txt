@@ -31,7 +31,7 @@ aux_source_directory(src/google/protobuf/compiler/java   ${PROJECT_NAME}_SRC)
 aux_source_directory(src/google/protobuf/compiler/python ${PROJECT_NAME}_SRC)
 endif (MSVC)
 
-include_directories(${PROJECT_SOURCE_DIR}/../include
+include_directories(${PROJECT_SOURCE_DIR}/../protobuf/include
                     ${PROJECT_BINARY_DIR}/../include/protobuf)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

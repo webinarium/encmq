@@ -44,6 +44,7 @@ endif (WIN32)
 
 include_directories(${Boost_INCLUDE_DIRS}
                     ${OPENSSL_INCLUDE_DIR}
+                    ${PROJECT_SOURCE_DIR}/../protobuf/include
                     ${PROJECT_SOURCE_DIR}/../include
                     ${PROJECT_BINARY_DIR}/../include
                     hdr)
